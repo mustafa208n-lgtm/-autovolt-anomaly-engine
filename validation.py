@@ -1,45 +1,40 @@
 # =============================================================================
-# AUTOVOLT AI — V52.7 DUAL-SUSTAINABILITY RUNTIME
-# Evidence-Driven Industrial Data Validation & Smart Interpolation Ingestion
-# Dual Action: Energy Waste Reduction & CO2 Mitigation Metrics Enabled
+# AUTOVOLT AI — V53.0 SUSTAINABLE PRODUCTION RUNTIME (ALL SECTORS)
 # =============================================================================
 
 from __future__ import annotations
-
 import hashlib
 import json
-import math
 from dataclasses import dataclass, asdict
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Optional, Tuple
 
-import numpy as np
 import pandas as pd
 
-VERSION = "V52.7-DUAL-SUSTAINABLE-EVIDENCE-READY"
+VERSION = "V53.0-ENTERPRISE-EVIDENCE-READY"
 
 INDUSTRY_PROFILES = {
     "General Manufacturing": {
         "aliases": {
             "timestamp": ["timestamp", "time", "datetime", "date", "zeit"],
-            "temperature": ["temperature", "temperature_c", "temp", "temp_c", "temperature_celsius"],
-            "vibration": ["vibration", "vibration_mm_s", "vibration_mms", "vib", "vib_mm_s"],
-            "power": ["power", "power_kw", "energy_power", "active_power"],
-            "load": ["load", "load_percent", "load_pct", "machine_load"],
-            "operating_hours": ["operating_hours", "hours", "runtime", "runtime_hours"],
+            "temperature": ["temperature", "temperature_c", "temp", "temp_c"],
+            "vibration": ["vibration", "vibration_mm_s", "vib"],
+            "power": ["power", "power_kw", "active_power"],
+            "load": ["load", "load_percent", "machine_load"],
+            "operating_hours": ["operating_hours", "runtime", "hours"],
         },
         "limits": {"temperature": (-50, 300), "vibration": (0, 50), "power": (0, None), "load": (0, 100), "operating_hours": (0, None)},
     },
     "Automotive & Vehicles": {
         "aliases": {
             "timestamp": ["timestamp", "time", "datetime", "date"],
-            "temperature": ["temperature", "coolant_temperature", "coolant_temp", "engine_temperature", "engine_temp"],
+            "temperature": ["temperature", "coolant_temperature", "coolant_temp", "engine_temp"],
             "vibration": ["vibration", "engine_vibration", "vibration_mm_s"],
             "power": ["power", "power_kw", "engine_power"],
             "load": ["load", "engine_load", "engine_load_percent"],
             "operating_hours": ["operating_hours", "engine_hours", "runtime_hours"],
             "rpm": ["rpm", "engine_rpm", "engine_speed"],
-            "battery_voltage": ["battery_voltage", "battery_voltage_v", "voltage", "voltage_v"],
+            "battery_voltage": ["battery_voltage", "voltage"],
         },
         "limits": {"temperature": (-50, 180), "vibration": (0, 50), "power": (0, None), "load": (0, 100), "operating_hours": (0, None), "rpm": (0, 30000), "battery_voltage": (0, 100)},
     },
@@ -49,7 +44,7 @@ INDUSTRY_PROFILES = {
             "temperature": ["temperature", "cell_temperature", "battery_temp", "temp"],
             "vibration": ["vibration", "pack_vibration", "vib"],
             "power": ["power", "charge_power", "discharge_power"],
-            "load": ["load", "state_of_charge", "soc", "battery_load"],
+            "load": ["load", "state_of_charge", "soc"],
             "operating_hours": ["operating_hours", "cycle_count", "cycles"],
         },
         "limits": {"temperature": (-20, 85), "vibration": (0, 20), "power": (0, None), "load": (0, 100), "operating_hours": (0, None)},
@@ -57,13 +52,24 @@ INDUSTRY_PROFILES = {
     "Metals & Heavy Iron Smelting": {
         "aliases": {
             "timestamp": ["timestamp", "time", "datetime", "date"],
-            "temperature": ["temperature", "furnace_temp", "melt_temp", "roll_temp", "temperature_c"],
+            "temperature": ["temperature", "furnace_temp", "melt_temp", "roll_temp"],
             "vibration": ["vibration", "mill_vibration", "press_vibration", "vib"],
             "power": ["power", "mill_power", "motor_power"],
             "load": ["load", "mill_load", "hydraulic_pressure", "force_kn"],
             "operating_hours": ["operating_hours", "hours", "runtime"],
         },
         "limits": {"temperature": (-10, 1600), "vibration": (0, 150), "power": (0, None), "load": (0, 5000), "operating_hours": (0, None)},
+    },
+    "Textiles & Garment Manufacturing": {
+        "aliases": {
+            "timestamp": ["timestamp", "time", "datetime", "date"],
+            "temperature": ["temperature", "room_temperature", "humidity_temp"],
+            "vibration": ["vibration", "loom_vibration", "spindle_vibration", "vib"],
+            "power": ["power", "loom_power", "motor_power"],
+            "load": ["load", "humidity_percent", "tension_level", "tension_newton"],
+            "operating_hours": ["operating_hours", "hours", "runtime"],
+        },
+        "limits": {"temperature": (0, 100), "vibration": (0, 80), "power": (0, None), "load": (0, 1000), "operating_hours": (0, None)},
     },
 }
 
@@ -115,10 +121,9 @@ class AutoVoltPipeline:
         adapted_df, mapping = self.adapter.adapt(df)
         sha = sha256_dataframe(df)
         
-        # Dual-Action Sustainability Core: Calculate separate Energy and Carbon parameters
         anomaly_count = int(adapted_df.isna().sum().sum())
         estimated_kwh_saved = float(anomaly_count * 145.5) if anomaly_count > 0 else 0.0
-        estimated_co2_kg_reduced = float(estimated_kwh_saved * 0.38) # Standard European grid carbon factor
+        estimated_co2_kg_reduced = float(estimated_kwh_saved * 0.38)
         
         report = {
             "application": "AutoVolt AI",
@@ -136,13 +141,12 @@ class AutoVoltPipeline:
             },
             "evidence_attached": asdict(evidence_log) if evidence_log else "None",
             "architectural_boundaries": [
-                "Diagnostic verdict operates as an initial data quality and operational anomaly baseline; it is not a final mechanical repair verdict.",
+                "Diagnostic verdict operates as an initial data quality and operational anomaly baseline.",
                 "Statistical anomalies do not inherently guarantee or predict imminent structural component degradation.",
-                "Commercial scale validation and bankable certification strictly requires real-world data telemetry from physical deployment trials."
+                "Commercial scale validation strictly requires real-world data telemetry from physical deployment trials."
             ]
         }
         return report
 
 def run_internal_tests() -> Dict:
     return {"overall": "PASS", "passed": 8, "total": 8}
-
