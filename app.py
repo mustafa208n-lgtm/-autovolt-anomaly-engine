@@ -75,7 +75,9 @@ if is_authenticated:
                 
                 st.info("💡 **Algorithmic Treatment Active:** Reconstructing telemetry stream via linear interpolation.")
                 time_cols = [col for col in numeric_df.columns if "time" in col.lower() or "date" in col.lower()]
-                interpolated_numeric = numeric_df.drop(columns=time_cols, errors='ignore').interpolate(method='linear').fillna(method='bfill')
+                
+                # Fixed: Replaced method keyword with clean chaining for pandas compatibility
+                interpolated_numeric = numeric_df.drop(columns=time_cols, errors='ignore').interpolate().bfill()
                 
                 processed_df = raw_df.copy()
                 for col in interpolated_numeric.columns:
@@ -126,11 +128,11 @@ if is_authenticated:
                 
                 metric_col1, metric_col2 = st.columns(2)
                 with metric_col1:
-                    st.metric(label="降低能源浪费 (⚡ Energy Saved)", value=f"{final_report['green_sustainability_metrics']['energy_waste_reduction_kwh']} kWh")
+                    st.metric(label="Energy Saved (⚡ Electricity Saved)", value=f"{final_report['green_sustainability_metrics']['energy_waste_reduction_kwh']} kWh")
                 with metric_col2:
-                    st.metric(label="减少碳排放 (🌱 CO2 Reduced)", value=f"{final_report['green_sustainability_metrics']['carbon_emissions_avoided_kg_co2']} kg CO2")
+                    st.metric(label="CO2 Reduced (🌱 CO2 Footprint Lowered)", value=f"{final_report['green_sustainability_metrics']['carbon_emissions_avoided_kg_co2']} kg CO2")
                 
-                st.error("⚠️ **Engineering Responsibility Disclaimer & Operational Advisory:**\n\nThis report functions strictly as a statistical diagnostic baseline. Plant engineers MUST be consulted before executing mechanical modifications.")
+                st.error("⚠️ **Engineering Responsibility Disclaimer & Operational Advisory:**\n\nThis report functions strictly as a diagnostic baseline. Plant engineers MUST be consulted before executing mechanical modifications.")
                 st.json(final_report)
                 
                 report_json = json.dumps(final_report, indent=2, ensure_ascii=False)
@@ -144,3 +146,4 @@ if is_authenticated:
             st.error(f"Structural runtime ingestion failure: {str(e)}")
 else:
     st.markdown('<div style="text-align:center; padding:50px; background-color:#F3F4F6; border-radius:10px; color:#6B7280; font-weight:600;">⚠️ DATA INGESTION ENGINE LOCKED — PROVIDE VALID REVENUE TOKEN TO INITIALIZE RUNTIME</div>', unsafe_allow_html=True)
+
