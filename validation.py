@@ -150,3 +150,4 @@ class AutoVoltPipeline:
 
 def run_internal_tests() -> Dict:
     return {"overall": "PASS", "passed": 8, "total": 8}
+
