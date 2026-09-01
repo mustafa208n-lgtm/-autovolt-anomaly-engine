@@ -163,3 +163,6 @@ if is_authenticated:
                     mime="application/json"
                 )
         except Exception as e:
+            st.error(f"Structural runtime ingestion failure: {str(e)}")
+else:
+    st.markdown('<div style="text-align:center; padding:50px; background-color:#F3F4F6; border-radius:10px; color:#6B7280; font-weight:600;">⚠️ DATA INGESTION ENGINE LOCKED — PROVIDE VALID SIGNED REVENUE TOKEN TO INITIALIZE RUNTIME</div>', unsafe_allow_html=True)
