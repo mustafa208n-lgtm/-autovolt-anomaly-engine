@@ -56,6 +56,7 @@ if user_key:
         st.error("❌ **Invalid Token:** The signature or license key entered is not registered in AutoVolt secure vault.")
 else:
     st.info("🔒 **System Locked:** Provide your Master Pass or a valid 30-day enterprise activation key to initialize the runtime.")
+
 # =============================================================================
 # PROTECTED RUNTIME ENVIRONMENT (Executes ONLY if is_authenticated is True)
 # =============================================================================
@@ -162,7 +163,3 @@ if is_authenticated:
                     mime="application/json"
                 )
         except Exception as e:
-            st.error(f"Structural runtime ingestion failure: {str(e)}")
-else:
-    st.markdown('<div style="text-align:center; padding:50px; background-color:#F3F4F6; border-radius:10px; color:#6B7280; font-weight:600;">⚠️ DATA INGESTION ENGINE LOCKED — PROVIDE VALID SIGNED REVENUE TOKEN TO INITIALIZE RUNTIME</div>', unsafe_allow_html=True)
-
