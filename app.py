@@ -1,12 +1,35 @@
 from __future__ import annotations
-import io, json
+import io, json, logging
 import pandas as pd
 import streamlit as st
 from validation import VERSION, INDUSTRY_PROFILES, AutoVoltPipeline, pilot_readiness_gate, run_internal_tests
 
+# Setup secure industrial logging configuration
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[logging.StreamHandler()]
+)
+
 st.set_page_config(page_title=f"AutoVolt AI {VERSION}",page_icon="⚡",layout="wide")
 st.title("⚡ AutoVolt AI")
 st.caption(f"Evidence-driven industrial analysis • {VERSION}")
+
+# --- FIELD AUTHENTICATION GATEWAY ---
+if "authenticated" not in st.session_state:
+    st.session_state["authenticated"] = False
+
+if not st.session_state["authenticated"]:
+    st.subheader("🔒 Field Authentication Required")
+    password = st.text_input("Enter Access Password:", type="password")
+    if st.button("Authenticate"):
+        if password == "GovernmentField2026":  # Secure field validation key
+            st.session_state["authenticated"] = True
+            st.rerun()
+        else:
+            st.error("Invalid password. Access denied.")
+    st.stop()
+# -------------------------------------
 
 with st.sidebar:
     st.header("⚙️ Analysis Settings")
@@ -19,18 +42,47 @@ f=st.file_uploader("CSV / Excel / TXT",type=["csv","xlsx","txt"])
 def load_file(upload):
     name=upload.name.lower()
     raw=upload.getvalue()
-    if name.endswith(".xlsx"): return pd.read_excel(io.BytesIO(raw))
+    
+    # Secure Content Type Verification via Extension
+    if not (name.endswith(".csv") or name.endswith(".xlsx") or name.endswith(".txt")):
+        logging.warning(f"Rejected file with unauthorized extension: {name}")
+        raise ValueError("Security Violation: Unsupported file extension.")
+
+    if name.endswith(".xlsx"): 
+        try:
+            return pd.read_excel(io.BytesIO(raw))
+        except Exception as ex:
+            logging.error(f"Excel parsing failure for {name}: {str(ex)}")
+            raise ValueError("Failed to parse Excel file. Ensure data format is correct.")
+            
     if name.endswith(".txt"):
-        for sep in [None,"\t",",",";"]:
-            try: return pd.read_csv(io.BytesIO(raw),sep=sep,engine="python")
-            except Exception: pass
-        raise ValueError("Could not read TXT. Check the column separator.")
-    for enc in ["utf-8","utf-8-sig","cp1252","latin1"]:
-        try: return pd.read_csv(io.BytesIO(raw),encoding=enc)
-        except Exception: pass
-    raise ValueError("Could not read CSV.")
+        for sep in [None, "\t", ",", ";"]:
+            try: 
+                return pd.read_csv(io.BytesIO(raw), sep=sep, engine="python")
+            except Exception as ex: 
+                logging.info(f"Separator trial failed during TXT parse: {str(ex)}")
+        logging.error(f"All structural separators failed for TXT file: {name}")
+        raise ValueError("Could not read TXT file structure. Check the column separators.")
+        
+    for enc in ["utf-8", "utf-8-sig", "cp1252", "latin1"]:
+        try: 
+            return pd.read_csv(io.BytesIO(raw), encoding=enc)
+        except Exception as ex: 
+            logging.info(f"Encoding trial {enc} failed during CSV parse: {str(ex)}")
+            
+    logging.error(f"All parsing configurations and encodings failed for CSV: {name}")
+    raise ValueError("Could not read CSV file due to unknown encoding structure.")
 
 if f:
+    # --- FIELD FILE SIZE PROTECTION ---
+    MAX_FILE_SIZE_MB = 50
+    file_size_mb = len(f.getvalue()) / (1024 * 1024)
+    if file_size_mb > MAX_FILE_SIZE_MB:
+        logging.warning(f"File upload blocked: {f.name} size ({file_size_mb:.1f} MB) exceeds maximum limit.")
+        st.error(f"❌ File size exceeds the maximum limit ({file_size_mb:.1f} MB). The maximum allowed size for field safety is {MAX_FILE_SIZE_MB} MB.")
+        st.stop()
+    # ----------------------------------
+
     try:
         raw=load_file(f)
         st.success(f"File read successfully: {len(raw):,} rows × {len(raw.columns):,} columns")
@@ -102,6 +154,7 @@ if f:
         st.markdown("---")
         st.warning("This software assists in data screening and anomaly detection. It is not a substitute for an engineer or a machine stop/repair decision.")
     except Exception as e:
+        logging.critical(f"Execution runtime failed dramatically: {str(e)}")
         st.error(f"File input failed: {e}")
 
 with st.expander("Internal Software Test"):
