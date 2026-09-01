@@ -1,109 +1,109 @@
-# =============================================================================
-# AUTOVOLT AI — V52.8 GLOBAL DUAL-SUSTAINABLE DASHBOARD (SAFE INTERPOLATION)
-# =============================================================================
-
-import io
-import json
+from __future__ import annotations
+import io, json
 import pandas as pd
 import streamlit as st
-from validation import VERSION, INDUSTRY_PROFILES, AutoVoltPipeline, PilotEvidenceLog
+from validation import VERSION, INDUSTRY_PROFILES, AutoVoltPipeline, pilot_readiness_gate, run_internal_tests
 
-st.set_page_config(page_title="AutoVolt AI — Secure Green Industrial Core v52.8", page_icon="⚡", layout="wide")
+st.set_page_config(page_title=f"AutoVolt AI {VERSION}",page_icon="⚡",layout="wide")
+st.title("⚡ AutoVolt AI")
+st.caption(f"Evidence-driven industrial analysis • {VERSION}")
 
-st.markdown('<div style="font-size:2.4rem; font-weight:700; color:#1E3A8A;">⚡ AutoVolt AI Green Industrial Core</div>', unsafe_allow_html=True)
-st.caption(f"Production Pilot Ingestion Layer & ESG Evidence Gateway — Version {VERSION}")
+with st.sidebar:
+    st.header("⚙️ Analysis Settings")
+    industry=st.selectbox("Select data industry",list(INDUSTRY_PROFILES.keys()))
+    st.caption("The four core industries: General Manufacturing, Automotive/Vehicles, Batteries, Metals.")
 
-st.sidebar.header("⚙️ Data Ingestion Controls")
-industry = st.sidebar.selectbox("Target Industrial Profile", list(INDUSTRY_PROFILES.keys()))
+st.subheader("1️⃣ Upload Your Data")
+f=st.file_uploader("CSV / Excel / TXT",type=["csv","xlsx","txt"])
 
-st.markdown("### 📊 Step 1: Telemetry Data Import")
-uploaded_file = st.file_uploader("Upload Industrial Sensor Dataset (CSV / Excel / TXT)", type=["csv", "xlsx", "txt"])
+def load_file(upload):
+    name=upload.name.lower()
+    raw=upload.getvalue()
+    if name.endswith(".xlsx"): return pd.read_excel(io.BytesIO(raw))
+    if name.endswith(".txt"):
+        for sep in [None,"\t",",",";"]:
+            try: return pd.read_csv(io.BytesIO(raw),sep=sep,engine="python")
+            except Exception: pass
+        raise ValueError("Could not read TXT. Check the column separator.")
+    for enc in ["utf-8","utf-8-sig","cp1252","latin1"]:
+        try: return pd.read_csv(io.BytesIO(raw),encoding=enc)
+        except Exception: pass
+    raise ValueError("Could not read CSV.")
 
-if uploaded_file is not None:
+if f:
     try:
-        if uploaded_file.name.endswith('.xlsx'):
-            raw_df = pd.read_excel(uploaded_file)
-        else:
-            raw_df = pd.read_csv(uploaded_file)
-            
-        st.success("✅ Dataset structure successfully ingested and parsed.")
-        
-        # Data Quality Check Inscription
-        missing_count = int(raw_df.isna().sum().sum())
-        if missing_count > 0:
-            st.warning(f"⚠️ **Data Quality Telemetry Alert:** {missing_count} data gaps detected! Missing values isolated as (None) to prevent grid arithmetic corruption.")
-            
-            # ⚡ Ultra-Safe Patch: Force convert all non-timestamp columns to float before interpolation
-            numeric_cols = [col for col in raw_df.columns if "time" not in col.lower() and "date" not in col.lower()]
-            for col in numeric_cols:
-                raw_df[col] = pd.to_numeric(raw_df[col], errors="coerce").astype(float)
-                
-            st.info("💡 **Algorithmic Treatment Active:** AutoVolt core has executed mathematical linear interpolation to temporarily reconstruct the telemetry stream for signal continuity.")
-            processed_df = raw_df.interpolate(method='linear').fillna(method='bfill')
-        else:
-            st.success("🎯 **Data Quality Inscription:** Integrity check passed. Telemetry stream is 100% complete with no missing values detected.")
-            processed_df = raw_df.copy()
-            
-        st.markdown("#### Raw Ingested Stream (First 5 Rows)")
-        st.dataframe(raw_df.head(5))
-        
-        if missing_count > 0:
-            st.markdown("#### Algorithmic Reconstructed Stream (Continuity Safe)")
-            st.dataframe(processed_df.head(5))
-        
+        raw=load_file(f)
+        st.success(f"File read successfully: {len(raw):,} rows × {len(raw.columns):,} columns")
+        st.markdown("**First 5 rows of raw data**")
+        st.dataframe(raw.head(),use_container_width=True,hide_index=True)
+        result=AutoVoltPipeline(industry).run(raw)
+        q=result["quality"]; a=result["adapter"]; report=result["report"]; evidence=result["evidence"]; temporal=result["temporal"]
+
+        st.subheader("2️⃣ Data Quality")
+        c1,c2,c3,c4=st.columns(4)
+        c1.metric("Status",q.status); c2.metric("Missing Values",q.missing_values); c3.metric("Out of Range",q.out_of_range_values); c4.metric("Unknown Columns",len(a.unmapped_columns))
+        if q.issues:
+            st.error("\n".join("• "+x for x in q.issues))
+        if q.warnings:
+            st.warning("\n".join("• "+x for x in q.warnings[:20]))
+
+        st.subheader("3️⃣ Adapter")
+        st.write(f"Detected dataset kind: **{a.dataset_kind}**")
+        if a.mapping: st.json(a.mapping)
+        if a.missing_recommended_signals: st.info("Missing recommended signals: "+", ".join(a.missing_recommended_signals))
+        if len(raw.columns)>=500: st.info("Handled high-dimensional file; unknown columns are not given invented names or meanings.")
+
+        st.subheader("4️⃣ Detected States")
+        if "autovolt_status" in result["data"]:
+            counts=result["data"]["autovolt_status"].value_counts(); x1,x2,x3=st.columns(3)
+            x1.metric("Normal",int(counts.get("Normal",0))); x2.metric("Needs Review",int(counts.get("Needs Review",0))); x3.metric("Abnormal",int(counts.get("Abnormal",0)))
+            cols=[c for c in ["timestamp","temperature","vibration","load","voltage","current","power","autovolt_status","autovolt_reason"] if c in result["data"].columns]
+            st.dataframe(result["data"][cols].tail(300),use_container_width=True,hide_index=True)
+
+        st.subheader("5️⃣ Evidence & Anomalies")
+        n=int(evidence.get("anomaly_count",0))
+        st.metric("Statistical Anomaly Count",n)
+        if n: st.dataframe(pd.DataFrame(evidence["anomalies"]),use_container_width=True,hide_index=True)
+        else: st.success("No clear statistical anomaly under the current method.")
+        st.caption("The anomaly is a statistical indicator, not a failure probability or final diagnosis.")
+
+        st.subheader("6️⃣ Temporal Change")
+        if temporal.get("status")=="AVAILABLE":
+            rows=[{"Signal":k,**v} for k,v in temporal["signals"].items()]
+            st.dataframe(pd.DataFrame(rows),use_container_width=True,hide_index=True)
+            if "timestamp" in result["data"]:
+                for col in [c for c in ["temperature","vibration","load","voltage","current","power"] if c in result["data"]][:4]:
+                    d=result["data"][["timestamp",col]].dropna().set_index("timestamp")
+                    if not d.empty: st.line_chart(d)
+        else: st.warning(temporal.get("reason","Temporal analysis not available."))
+
+        st.subheader("7️⃣ What is Required?")
+        for r in report["recommendations"]: st.write("🔧 "+r)
+        gate=pilot_readiness_gate(result)
+        st.subheader("8️⃣ Pilot Gate")
+        if gate["status"].startswith("READY"): st.success("🟢 Software is ready for external pilot testing.")
+        else: st.error("🔴 Testing is blocked due to data quality issues.")
+        for x in gate["warnings"]: st.warning(x)
+        st.caption(gate["note"])
+
+        st.subheader("9️⃣ Pilot Evidence Log")
+        pilot_id=st.text_input("Pilot ID","PILOT-001"); site_id=st.text_input("Site/Plant ID","SITE-001")
+        review=st.selectbox("Engineer Review",["Not reviewed yet","Reviewed - Supported","Reviewed - Unsupported","Inconclusive"])
+        notes=st.text_area("Engineer/Operator Notes"); action=st.text_area("Action Taken")
+        evidence_manifest={"pilot_id":pilot_id,"site_id":site_id,"industry":industry,"application_version":VERSION,"analysis_status":report["overall_status"],"quality_status":q.status,"anomaly_count":n,"engineer_review":review,"notes":notes,"action_taken":action,"data":report["data"]}
+
+        st.subheader("📥 Reports")
+        rjson=json.dumps(report,ensure_ascii=False,indent=2); manifest=json.dumps(evidence_manifest,ensure_ascii=False,indent=2); csv=result["data"].to_csv(index=False).encode("utf-8-sig")
+        b1,b2,b3=st.columns(3)
+        b1.download_button("📄 JSON Report",rjson,"autovolt_report.json","application/json",use_container_width=True)
+        b2.download_button("📦 Pilot Evidence",manifest,f"{pilot_id}_evidence.json","application/json",use_container_width=True)
+        b3.download_button("📊 Analyzed Data CSV",csv,"autovolt_analyzed_data.csv","text/csv",use_container_width=True)
+
         st.markdown("---")
-        st.markdown("### 📝 Step 2: Pilot Evidence Registry (ESG Bankable Audit Trail)")
-        st.info("Formulate this registry in cooperation with the plant engineer to securely log deployment case studies for institutional funding.")
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            exp_id = st.text_input("Pilot Deployment Experiment ID", value="PILOT-001")
-            factory_id = st.text_input("Facility / Factory Identifier", placeholder="e.g., Central Metal Smelting Works")
-        with col2:
-            engineer_review = st.selectbox("On-Site Engineering Prediction Validation", ["Validated and strictly matched operational anomaly", "Requires calibration and parametric adjustments", "Normal baseline telemetry matching reality"])
-            action_taken = st.text_input("Mitigation / Corrective Action Taken", placeholder="e.g., Machine isolation and immediate bearing maintenance schedule")
-            
-        engineer_notes = st.text_area("Detailed Engineering Analytical Observations & Field Notes")
-        
-        if st.button("🚀 Execute AutoVolt Core & Construct Official Evidence Manifest", type="primary"):
-            log_entry = PilotEvidenceLog(
-                experiment_id=exp_id,
-                factory_id=factory_id,
-                engineer_review=engineer_review,
-                engineer_notes=engineer_notes,
-                action_taken=action_taken
-            )
-            
-            pipeline = AutoVoltPipeline(industry)
-            final_report = pipeline.run(raw_df, evidence_log=log_entry)
-            
-            # Injecting missing metrics for global sustainability audits
-            final_report["data_summary"]["missing_sensors_detected"] = missing_count
-            
-            st.success("🟢 Data processing complete. Pilot Evidence File generated successfully with Dual-Action Sustainability Metrics!")
-            
-            # 📊 Visualizing the separate Dual Sustainability metrics side-by-side
-            metric_col1, metric_col2 = st.columns(2)
-            with metric_col1:
-                st.metric(label="📉 Energy Waste Reduction (⚡ Electricity Saved)", value=f"{final_report['green_sustainability_metrics']['energy_waste_reduction_kwh']} kWh")
-            with metric_col2:
-                st.metric(label="🌱 Carbon Emissions Avoided (📉 CO2 Footprint Lowered)", value=f"{final_report['green_sustainability_metrics']['carbon_emissions_avoided_kg_co2']} kg CO2")
-            
-            # THE SECURITY RED BOX: Explicit Engineering Disclaimer & Liability Shield
-            st.error("⚠️ **Engineering Responsibility Disclaimer & Operational Advisory:**\n\n"
-                     "This analytical report functions strictly as a diagnostic baseline for statistical anomalies and data stream validation. "
-                     "It does **NOT** constitute a final, definitive mechanical repair verdict or physical engineering certification.\n\n"
-                     "**Mandatory Safety Action Required:** On-site plant engineers, field technicians, and specialized mechanical experts **MUST** "
-                     "be consulted to physically audit the machinery, inspect sensor physical connectivity, and verify conditions on the shop floor before executing any hardware modifications or operational shut-downs.")
-            
-            st.json(final_report)
-            
-            report_json = json.dumps(final_report, indent=2, ensure_ascii=False)
-            st.download_button(
-                label="📥 Download Official Evidence Manifest (Pilot Evidence JSON)",
-                data=report_json,
-                file_name=f"AutoVolt_Evidence_{factory_id}_{exp_id}.json",
-                mime="application/json"
-            )
+        st.warning("This software assists in data screening and anomaly detection. It is not a substitute for an engineer or a machine stop/repair decision.")
     except Exception as e:
-        st.error(f"Structural runtime ingestion failure: {str(e)}")
+        st.error(f"File input failed: {e}")
+
+with st.expander("Internal Software Test"):
+    if st.button("Run Internal Tests"):
+        st.json(run_internal_tests())
