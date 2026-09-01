@@ -1,5 +1,5 @@
 # =============================================================================
-# AUTOVOLT AI — V52.7 GLOBAL DUAL-SUSTAINABLE DASHBOARD
+# AUTOVOLT AI — V52.8 GLOBAL DUAL-SUSTAINABLE DASHBOARD (SAFE INTERPOLATION)
 # =============================================================================
 
 import io
@@ -8,7 +8,7 @@ import pandas as pd
 import streamlit as st
 from validation import VERSION, INDUSTRY_PROFILES, AutoVoltPipeline, PilotEvidenceLog
 
-st.set_page_config(page_title="AutoVolt AI — Secure Green Industrial Core v52.7", page_icon="⚡", layout="wide")
+st.set_page_config(page_title="AutoVolt AI — Secure Green Industrial Core v52.8", page_icon="⚡", layout="wide")
 
 st.markdown('<div style="font-size:2.4rem; font-weight:700; color:#1E3A8A;">⚡ AutoVolt AI Green Industrial Core</div>', unsafe_allow_html=True)
 st.caption(f"Production Pilot Ingestion Layer & ESG Evidence Gateway — Version {VERSION}")
@@ -33,7 +33,11 @@ if uploaded_file is not None:
         if missing_count > 0:
             st.warning(f"⚠️ **Data Quality Telemetry Alert:** {missing_count} data gaps detected! Missing values isolated as (None) to prevent grid arithmetic corruption.")
             
-            # Smart Processing: Perform Algorithmic Linear Interpolation to fill data gaps for visualization
+            # ⚡ Ultra-Safe Patch: Force convert all non-timestamp columns to float before interpolation
+            numeric_cols = [col for col in raw_df.columns if "time" not in col.lower() and "date" not in col.lower()]
+            for col in numeric_cols:
+                raw_df[col] = pd.to_numeric(raw_df[col], errors="coerce").astype(float)
+                
             st.info("💡 **Algorithmic Treatment Active:** AutoVolt core has executed mathematical linear interpolation to temporarily reconstruct the telemetry stream for signal continuity.")
             processed_df = raw_df.interpolate(method='linear').fillna(method='bfill')
         else:
