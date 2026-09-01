@@ -1,5 +1,5 @@
 # =============================================================================
-# AUTOVOLT AI — V52.9-MASTER WITH DEVELOPER BYPASS & SUBSCRIPTION GATEWAY
+# AUTOVOLT AI — V53.0 MASTER LICENSING CORE (ALL SECTORS ACTIVE)
 # =============================================================================
 
 import io
@@ -9,12 +9,10 @@ import streamlit as st
 from datetime import datetime
 from validation import VERSION, INDUSTRY_PROFILES, AutoVoltPipeline, PilotEvidenceLog
 
-st.set_page_config(page_title="AutoVolt AI — Secure Enterprise Licensing v52.9", page_icon="⚡", layout="wide")
+st.set_page_config(page_title="AutoVolt AI — Secure Enterprise Licensing v53.0", page_icon="⚡", layout="wide")
 
-# 🔑 MASTER OWNER KEY (Never expires, unlocks everything for you)
 MASTER_KEY = "AV-MASTER-MUSTAFA"
 
-# 🔒 CLIENT SUBSCRIPTION REGISTRY (Keys expire after 30 days for factories)
 LICENSE_REGISTRY = {
     "AV-SPAIN-IRON-9921X": {"factory": "Madrid Heavy Metals Works", "expiry": "2026-10-01", "status": "ACTIVE"},
     "AV-BAGHDAD-STEEL-4412B": {"factory": "Central Steel Smelting Plant", "expiry": "2026-10-15", "status": "ACTIVE"},
@@ -24,42 +22,33 @@ LICENSE_REGISTRY = {
 st.markdown('<div style="font-size:2.4rem; font-weight:700; color:#1E3A8A;">⚡ AutoVolt AI Green Industrial Core</div>', unsafe_allow_html=True)
 st.caption(f"Production Pilot Ingestion Layer & ESG Evidence Gateway — Version {VERSION}")
 
-# 📦 GATEWAY LAYER: Subscription Key Validation Box
 st.markdown("### 🔐 Security & Licensing Gateway")
-user_key = st.text_input("Enter Your Encrypted Subscription Key or Master Pass:", type="password", help="Provide your 30-day client token or the Master Admin Pass.")
+user_key = st.text_input("Enter Your Encrypted Subscription Key or Master Pass:", type="password")
 
-# Core Authentication Logic
 is_authenticated = False
 current_factory_name = "Unauthorized Client"
 is_master_owner = False
 
 if user_key:
-    # ⚡ Check 1: Developer Master Bypass
     if user_key == MASTER_KEY:
         is_authenticated = True
         is_master_owner = True
         current_factory_name = "AutoVolt Owner / Admin Mode"
-        st.success("👑 **Master Access Granted:** Welcome back, Mustafa. Admin Environment fully unlocked with lifetime commercial privileges.")
-    
-    # 🔒 Check 2: Standard Corporate Clients
+        st.success("👑 **Master Access Granted:** Welcome back, Mustafa. Admin Environment fully unlocked.")
     elif user_key in LICENSE_REGISTRY:
         license_info = LICENSE_REGISTRY[user_key]
         expiry_date = datetime.strptime(license_info["expiry"], "%Y-%m-%d")
-        
         if datetime.utcnow() < expiry_date and license_info["status"] == "ACTIVE":
             is_authenticated = True
             current_factory_name = license_info["factory"]
-            st.success(f"🔓 **Access Granted:** License authenticated for **[{current_factory_name}]**. Subscription active until: {license_info['expiry']}.")
+            st.success(f"🔓 **Access Granted:** License authenticated for **[{current_factory_name}]**.")
         else:
-            st.error(f"❌ **License Expired:** This subscription expired on {license_info['expiry']}. Ingestion layer locked.")
+            st.error(f"❌ **License Expired:** This subscription expired on {license_info['expiry']}.")
     else:
-        st.error("❌ **Invalid Token:** The signature or license key entered is not registered in AutoVolt secure vault.")
+        st.error("❌ **Invalid Token:** The signature or license key entered is not registered.")
 else:
-    st.info("🔒 **System Locked:** Provide your Master Pass or a valid 30-day enterprise activation key to initialize the runtime.")
+    st.info("🔒 **System Locked:** Provide your Master Pass or a valid 30-day enterprise activation key.")
 
-# =============================================================================
-# PROTECTED RUNTIME ENVIRONMENT (Executes ONLY if is_authenticated is True)
-# =============================================================================
 if is_authenticated:
     st.sidebar.header("⚙️ Data Ingestion Controls")
     industry = st.sidebar.selectbox("Target Industrial Profile", list(INDUSTRY_PROFILES.keys()))
@@ -75,38 +64,35 @@ if is_authenticated:
                 raw_df = pd.read_csv(uploaded_file)
                 
             st.success("✅ Dataset structure successfully ingested and parsed.")
-            
-            # Data Quality Check Inscription
             missing_count = int(raw_df.isna().sum().sum())
+            
             if missing_count > 0:
-                st.warning(f"⚠️ **Data Quality Telemetry Alert:** {missing_count} data gaps detected! Missing values isolated as (None) to prevent grid arithmetic corruption.")
-                
-                # Ultra-Safe Patch: Isolate timestamp and strictly force numeric translation before interpolation
+                st.warning(f"⚠️ **Data Quality Telemetry Alert:** {missing_count} data gaps detected!")
                 numeric_df = raw_df.copy()
                 for col in numeric_df.columns:
                     if "time" not in col.lower() and "date" not in col.lower():
                         numeric_df[col] = pd.to_numeric(numeric_df[col], errors="coerce")
                 
-                st.info("💡 **Algorithmic Treatment Active:** AutoVolt core has executed mathematical linear interpolation to temporarily reconstruct the telemetry stream for signal continuity.")
-                interpolated_numeric = numeric_df.drop(columns=[col for col in numeric_df.columns if "time" in col.lower() or "date" in col.lower()], errors='ignore').interpolate(method='linear').fillna(method='bfill')
+                st.info("💡 **Algorithmic Treatment Active:** Reconstructing telemetry stream via linear interpolation.")
+                time_cols = [col for col in numeric_df.columns if "time" in col.lower() or "date" in col.lower()]
+                interpolated_numeric = numeric_df.drop(columns=time_cols, errors='ignore').interpolate(method='linear').fillna(method='bfill')
                 
                 processed_df = raw_df.copy()
                 for col in interpolated_numeric.columns:
                     processed_df[col] = interpolated_numeric[col]
             else:
-                st.success("🎯 **Data Quality Inscription:** Integrity check passed. Telemetry stream is 100% complete with no missing values detected.")
+                st.success("🎯 **Data Quality Inscription:** Integrity check passed.")
                 processed_df = raw_df.copy()
                 
             st.markdown("#### Raw Ingested Stream (First 5 Rows)")
             st.dataframe(raw_df.head(5))
             
             if missing_count > 0:
-                st.markdown("#### Algorithmic Reconstructed Stream (Continuity Safe)")
+                st.markdown("#### Algorithmic Reconstructed Stream")
                 st.dataframe(processed_df.head(5))
             
             st.markdown("---")
             st.markdown("### 📝 Step 2: Pilot Evidence Registry (ESG Bankable Audit Trail)")
-            st.info(f"Logging active for authenticated client: **{current_factory_name}**")
             
             col1, col2 = st.columns(2)
             with col1:
@@ -118,8 +104,8 @@ if is_authenticated:
                     factory_id = st.text_input("Facility / Factory Identifier", value=current_factory_name, disabled=True)
                     display_factory = current_factory_name
             with col2:
-                engineer_review = st.selectbox("On-Site Engineering Prediction Validation", ["Validated and strictly matched operational anomaly", "Requires calibration and parametric adjustments", "Normal baseline telemetry matching reality"])
-                action_taken = st.text_input("Mitigation / Corrective Action Taken", placeholder="e.g., Machine isolation and immediate bearing maintenance schedule")
+                engineer_review = st.selectbox("On-Site Engineering Validation", ["Validated and strictly matched operational anomaly", "Requires calibration", "Normal baseline telemetry"])
+                action_taken = st.text_input("Mitigation / Corrective Action Taken", placeholder="e.g., Machine isolation")
                 
             engineer_notes = st.text_area("Detailed Engineering Analytical Observations & Field Notes")
             
@@ -134,25 +120,17 @@ if is_authenticated:
                 
                 pipeline = AutoVoltPipeline(industry)
                 final_report = pipeline.run(raw_df, evidence_log=log_entry)
-                
                 final_report["data_summary"]["missing_sensors_detected"] = missing_count
                 
-                st.success("🟢 Data processing complete. Pilot Evidence File generated successfully with Dual-Action Sustainability Metrics!")
+                st.success("🟢 Data processing complete. Pilot Evidence File generated successfully!")
                 
-                # 📊 Visualizing the separate Dual Sustainability metrics side-by-side
                 metric_col1, metric_col2 = st.columns(2)
                 with metric_col1:
-                    st.metric(label="📉 Energy Waste Reduction (⚡ Electricity Saved)", value=f"{final_report['green_sustainability_metrics']['energy_waste_reduction_kwh']} kWh")
+                    st.metric(label="降低能源浪费 (⚡ Energy Saved)", value=f"{final_report['green_sustainability_metrics']['energy_waste_reduction_kwh']} kWh")
                 with metric_col2:
-                    st.metric(label="🌱 Carbon Emissions Avoided (📉 CO2 Footprint Lowered)", value=f"{final_report['green_sustainability_metrics']['carbon_emissions_avoided_kg_co2']} kg CO2")
+                    st.metric(label="减少碳排放 (🌱 CO2 Reduced)", value=f"{final_report['green_sustainability_metrics']['carbon_emissions_avoided_kg_co2']} kg CO2")
                 
-                # THE SECURITY RED BOX: Explicit Engineering Disclaimer & Liability Shield
-                st.error("⚠️ **Engineering Responsibility Disclaimer & Operational Advisory:**\n\n"
-                         "This analytical report functions strictly as a diagnostic baseline for statistical anomalies and data stream validation. "
-                         "It does **NOT** constitute a final, definitive mechanical repair verdict or physical engineering certification.\n\n"
-                         "**Mandatory Safety Action Required:** On-site plant engineers, field technicians, and specialized mechanical experts **MUST** "
-                         "be consulted to physically audit the machinery, inspect sensor physical connectivity, and verify conditions on the shop floor before executing any hardware modifications or operational shut-downs.")
-                
+                st.error("⚠️ **Engineering Responsibility Disclaimer & Operational Advisory:**\n\nThis report functions strictly as a statistical diagnostic baseline. Plant engineers MUST be consulted before executing mechanical modifications.")
                 st.json(final_report)
                 
                 report_json = json.dumps(final_report, indent=2, ensure_ascii=False)
@@ -165,4 +143,4 @@ if is_authenticated:
         except Exception as e:
             st.error(f"Structural runtime ingestion failure: {str(e)}")
 else:
-    st.markdown('<div style="text-align:center; padding:50px; background-color:#F3F4F6; border-radius:10px; color:#6B7280; font-weight:600;">⚠️ DATA INGESTION ENGINE LOCKED — PROVIDE VALID SIGNED REVENUE TOKEN TO INITIALIZE RUNTIME</div>', unsafe_allow_html=True)
+    st.markdown('<div style="text-align:center; padding:50px; background-color:#F3F4F6; border-radius:10px; color:#6B7280; font-weight:600;">⚠️ DATA INGESTION ENGINE LOCKED — PROVIDE VALID REVENUE TOKEN TO INITIALIZE RUNTIME</div>', unsafe_allow_html=True)
