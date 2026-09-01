@@ -1,5 +1,5 @@
 # =============================================================================
-# AUTOVOLT AI — V52.0 PILOT DASHBOARD WITH EVIDENCE GATEWAY
+# AUTOVOLT AI — V52.0 PILOT DASHBOARD WITH QUALITY ALERTS
 # =============================================================================
 
 import io
@@ -27,6 +27,14 @@ if uploaded_file is not None:
             raw_df = pd.read_csv(uploaded_file)
             
         st.success("✅ تم استلام وقراءة بنية ملف البيانات بنجاح.")
+        
+        # 🔍 التعديل الهندسي الذكي: فحص وإشعار نقص البيانات صراحة للمستخدم
+        missing_count = int(raw_df.isna().sum().sum())
+        if missing_count > 0:
+            st.warning(f"⚠️ **إشعار فحص الجودة الميداني:** تم رصد نقص في البيانات التشغيلية المرفوعة! هناك عدد ({missing_count}) خلية/قراءة مفقودة في المستشعرات تم رصدها كـ (None). يوصى بمراجعة سلامة الاتصال بالمكائن.")
+        else:
+            st.success("🎯 **إشعار جودة البيانات:** تم الفحص الهيكلي، البيانات كاملة 100% ولا يوجد أي نقص في قراءات المستشعرات.")
+            
         st.dataframe(raw_df.head(5))
         
         st.markdown("---")
@@ -55,11 +63,12 @@ if uploaded_file is not None:
             pipeline = AutoVoltPipeline(industry)
             final_report = pipeline.run(raw_df, evidence_log=log_entry)
             
-            st.success("🟢 اكتملت معالجة البيانات وبناء ملف الأدلة (Pilot Evidence File) بنجاح!")
+            # حقن القيمة المفقودة في التقرير النهائي ليقرأها الممول صراحة
+            final_report["data_summary"]["missing_sensors_detected"] = missing_count
             
+            st.success("🟢 اكتملت معالجة البيانات وبناء ملف الأدلة (Pilot Evidence File) بنجاح!")
             st.json(final_report)
             
-            # تصدير التقرير كملف قابل للتنزيل فوراً
             report_json = json.dumps(final_report, indent=2, ensure_ascii=False)
             st.download_button(
                 label="📥 تحميل ملف الأدلة الرسمي (Pilot Evidence JSON)",
