@@ -1,5 +1,5 @@
 # =============================================================================
-# AUTOVOLT AI — V52.0 PRODUCTION PILOT CORE
+# AUTOVOLT AI — V52.1 GLOBAL ENTERPRISE RUNTIME
 # Evidence-Driven Industrial Data Validation & Pilot Evidence Gateway
 # Secure, Enterprise-Grade Security Active (AES-256 / SHA-256)
 # =============================================================================
@@ -16,10 +16,10 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 
-VERSION = "V52.0-PILOT-EVIDENCE-READY"
+VERSION = "V52.1-ENTERPRISE-EVIDENCE-READY"
 
 INDUSTRY_PROFILES = {
-    "التصنيع العام": {
+    "General Manufacturing": {
         "aliases": {
             "timestamp": ["timestamp", "time", "datetime", "date", "zeit"],
             "temperature": ["temperature", "temperature_c", "temp", "temp_c", "temperature_celsius"],
@@ -30,7 +30,7 @@ INDUSTRY_PROFILES = {
         },
         "limits": {"temperature": (-50, 300), "vibration": (0, 50), "power": (0, None), "load": (0, 100), "operating_hours": (0, None)},
     },
-    "السيارات / المركبات": {
+    "Automotive & Vehicles": {
         "aliases": {
             "timestamp": ["timestamp", "time", "datetime", "date"],
             "temperature": ["temperature", "coolant_temperature", "coolant_temp", "engine_temperature", "engine_temp"],
@@ -43,7 +43,7 @@ INDUSTRY_PROFILES = {
         },
         "limits": {"temperature": (-50, 180), "vibration": (0, 50), "power": (0, None), "load": (0, 100), "operating_hours": (0, None), "rpm": (0, 30000), "battery_voltage": (0, 100)},
     },
-    "تخزين الطاقة والبطاريات": {
+    "Energy Storage & Batteries": {
         "aliases": {
             "timestamp": ["timestamp", "time", "datetime", "date"],
             "temperature": ["temperature", "cell_temperature", "battery_temp", "temp"],
@@ -54,7 +54,7 @@ INDUSTRY_PROFILES = {
         },
         "limits": {"temperature": (-20, 85), "vibration": (0, 20), "power": (0, None), "load": (0, 100), "operating_hours": (0, None)},
     },
-    "ورش ومصانع الحديد والمعادن": {
+    "Metals & Heavy Iron Smelting": {
         "aliases": {
             "timestamp": ["timestamp", "time", "datetime", "date"],
             "temperature": ["temperature", "furnace_temp", "melt_temp", "roll_temp", "temperature_c"],
@@ -119,19 +119,18 @@ class AutoVoltPipeline:
             "application": "AutoVolt AI",
             "version": VERSION,
             "generated_at": datetime.utcnow().isoformat() + "Z",
-            "industry": self.industry,
+            "industry_profile": self.industry,
             "gateway_status": "READY_FOR_EXTERNAL_TESTING",
             "commercial_validation_proven": False,
             "data_summary": {"rows": len(df), "columns": len(df.columns), "sha256": sha},
             "evidence_attached": asdict(evidence_log) if evidence_log else "None",
-            "limitations": [
-                "النتيجة ليست تشخيصاً هندسياً نهائياً.",
-                "الحالات الشاذة الإحصائية لا تعني بالضرورة وجود عطل ميكانيكي حتمي.",
-                "الإثبات التجاري والاعتماد المالي يتطلب توثيق دراسات حالة (Case Studies) ميدانية حقيقية."
+            "architectural_boundaries": [
+                "Diagnostic verdict operates as an initial data quality and operational anomaly baseline; it is not a final mechanical repair verdict.",
+                "Statistical anomalies do not inherently guarantee or predict imminent structural component degradation.",
+                "Commercial scale validation and bankable certification strictly requires real-world data telemetry from physical deployment trials."
             ]
         }
         return report
 
 def run_internal_tests() -> Dict:
     return {"overall": "PASS", "passed": 8, "total": 8}
-
