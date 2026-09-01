@@ -1,7 +1,6 @@
 # =============================================================================
-# AUTOVOLT AI — V52.7 DUAL-SUSTAINABILITY RUNTIME
-# Evidence-Driven Industrial Data Validation & Smart Interpolation Ingestion
-# Dual Action: Energy Waste Reduction & CO2 Mitigation Metrics Enabled
+# AUTOVOLT AI — V52.8 GLOBAL ENTERPRISE CORE
+# Evidence-Driven Industrial Data Validation & Ultra-Safe Numerical Conversion
 # =============================================================================
 
 from __future__ import annotations
@@ -16,7 +15,7 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 
-VERSION = "V52.7-DUAL-SUSTAINABLE-EVIDENCE-READY"
+VERSION = "V52.8-SUSTAINABLE-EVIDENCE-READY"
 
 INDUSTRY_PROFILES = {
     "General Manufacturing": {
@@ -99,9 +98,12 @@ class IndustrialAdapter:
                     mapping[col] = canonical
                     break
         out = df.rename(columns=mapping).copy()
+        
+        # ⚡ Safe Ingestion Patch: Strictly enforce numerical datatype conversion to float
         for canonical in set(mapping.values()):
             if canonical != "timestamp":
-                out[canonical] = pd.to_numeric(out[canonical], errors="coerce")
+                out[canonical] = pd.to_numeric(out[canonical], errors="coerce").astype(float)
+                
         if "timestamp" in out.columns:
             out["timestamp"] = pd.to_datetime(out["timestamp"], errors="coerce")
         return out, mapping
@@ -115,10 +117,9 @@ class AutoVoltPipeline:
         adapted_df, mapping = self.adapter.adapt(df)
         sha = sha256_dataframe(df)
         
-        # Dual-Action Sustainability Core: Calculate separate Energy and Carbon parameters
         anomaly_count = int(adapted_df.isna().sum().sum())
         estimated_kwh_saved = float(anomaly_count * 145.5) if anomaly_count > 0 else 0.0
-        estimated_co2_kg_reduced = float(estimated_kwh_saved * 0.38) # Standard European grid carbon factor
+        estimated_co2_kg_reduced = float(estimated_kwh_saved * 0.38)
         
         report = {
             "application": "AutoVolt AI",
