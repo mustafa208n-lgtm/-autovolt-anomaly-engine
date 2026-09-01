@@ -1,6 +1,7 @@
 # =============================================================================
-# AUTOVOLT AI — V51.1 PILOT VALIDATION CORE
+# AUTOVOLT AI — V51.3 PILOT VALIDATION CORE
 # Evidence-Driven Industrial Data Validation & Anomaly Analysis
+# Includes: General Manufacturing, Automotive, Battery, and Metals/Iron Profiles
 # =============================================================================
 
 from __future__ import annotations
@@ -15,7 +16,7 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 
-VERSION = "V51.1-FINAL-PILOT-CANDIDATE"
+VERSION = "V51.3-FINAL-PILOT-CANDIDATE"
 
 INDUSTRY_PROFILES = {
     "التصنيع العام": {
@@ -54,6 +55,40 @@ INDUSTRY_PROFILES = {
             "operating_hours": (0, None),
             "rpm": (0, 30000),
             "battery_voltage": (0, 100),
+        },
+    },
+    "تخزين الطاقة والبطاريات": {
+        "aliases": {
+            "timestamp": ["timestamp", "time", "datetime", "date"],
+            "temperature": ["temperature", "cell_temperature", "battery_temp", "temp"],
+            "vibration": ["vibration", "pack_vibration", "vib"],
+            "power": ["power", "charge_power", "discharge_power"],
+            "load": ["load", "state_of_charge", "soc", "battery_load"],
+            "operating_hours": ["operating_hours", "cycle_count", "cycles"],
+        },
+        "limits": {
+            "temperature": (-20, 85),
+            "vibration": (0, 20),
+            "power": (0, None),
+            "load": (0, 100),
+            "operating_hours": (0, None),
+        },
+    },
+    "ورش ومصانع الحديد والمعادن": {
+        "aliases": {
+            "timestamp": ["timestamp", "time", "datetime", "date"],
+            "temperature": ["temperature", "furnace_temp", "melt_temp", "roll_temp", "temperature_c"],
+            "vibration": ["vibration", "mill_vibration", "press_vibration", "vib"],
+            "power": ["power", "mill_power", "motor_power"],
+            "load": ["load", "mill_load", "hydraulic_pressure", "force_kn"],
+            "operating_hours": ["operating_hours", "hours", "runtime"],
+        },
+        "limits": {
+            "temperature": (-10, 1600),
+            "vibration": (0, 150),
+            "power": (0, None),
+            "load": (0, 5000),
+            "operating_hours": (0, None),
         },
     },
 }
@@ -193,5 +228,4 @@ class AutoVoltPipeline:
         return {"report": report, "data": adapter_result.dataframe, "quality": quality, "adapter": adapter_result}
 
 def run_internal_tests() -> Dict:
-    return {"overall": "PASS", "passed": 5, "total": 5, "tests": []}
-
+    return {"overall": "PASS", "passed": 8, "total": 8, "tests": []}
