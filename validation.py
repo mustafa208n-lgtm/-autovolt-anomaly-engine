@@ -173,3 +173,28 @@ def pilot_readiness_gate(result: dict) -> dict:
         "warnings": warnings,
         "note": "Automated gateway screening generated via AutoVolt Dual-Sustainability validation runtime core."
     }
+
+# --- Ultimate Patch to fix Pandas 3.0+ fillna(method=...) compatibility error ---
+import pandas as pd
+
+def safe_fillna_patch(self, value=None, method=None, axis=None, inplace=False, limit=None, **kwargs):
+    if method is not None:
+        # Dynamically route the old 'method' call to modern ffill/bfill handlers
+        if method in ['ffill', 'pad']:
+            res = self.ffill(axis=axis, limit=limit)
+        elif method in ['bfill', 'backfill']:
+            res = self.bfill(axis=axis, limit=limit)
+        else:
+            raise ValueError(f"Unknown fillna method: {method}")
+        
+        if inplace:
+            self.update(res)
+            return None
+        return res
+    # Fallback to standard fillna functionality if no legacy method parameter is supplied
+    return original_fillna(self, value=value, axis=axis, inplace=inplace, limit=limit, **kwargs)
+
+# Inject the patch directly into the Pandas core frame component hierarchy
+original_fillna = pd.DataFrame.fillna
+pd.DataFrame.fillna = safe_fillna_patch
+pd.Series.fillna = safe_fillna_patch
