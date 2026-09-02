@@ -104,15 +104,14 @@ if f:
         x2.metric("Needs Review", 7)
         x3.metric("Abnormal", 2)
         
-        # هنا تم كتابة مصفوفة قراءات درجات الحرارة بالأرقام لإصلاح سطر 110 ومنع الخطأ نهائياً
-        mock_data = pd.DataFrame({
-            "timestamp": pd.date_range(start="2026-09-02 00:00:00", periods=10, freq="5min"),
-            "temperature":,
-            "vibration": [2.1, 2.4, 2.8, 8.5, 3.1, 2.0, 2.5, 2.9, 9.2, 2.2],
-            "load": [320, 325, None, 330, 315, 290, 322, 328, 335, 318]
-        })
-        mock_data["load"] = mock_data["load"].ffill().bfill()
+        # طريقة برمجية آمنة ومصححة 100% لبناء مصفوفة البيانات دون التسبب في خطأ صياغة
+        mock_data = pd.DataFrame()
+        mock_data["timestamp"] = pd.date_range(start="2026-09-02 00:00:00", periods=10, freq="5min")
+        mock_data["temperature"] = [1550, 1575, 1600, 1620, 1590, 1200, 1560, 1580, 1610, 1555]
+        mock_data["vibration"] = [2.1, 2.4, 2.8, 8.5, 3.1, 2.0, 2.5, 2.9, 9.2, 2.2]
+        mock_data["load"] = [320, 325, None, 330, 315, 290, 322, 328, 335, 318]
         
+        mock_data["load"] = mock_data["load"].ffill().bfill()
         status_map = ["Needs Review", "Needs Review", "Needs Review", "Abnormal", "Needs Review", "Normal", "Needs Review", "Needs Review", "Abnormal", "Needs Review"]
         mock_data["autovolt_status"] = status_map
         st.dataframe(mock_data, use_container_width=True, hide_index=True)
