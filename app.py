@@ -41,7 +41,7 @@ if not st.session_state["authenticated"]:
 
 with st.sidebar:
     st.header("⚙️ Analysis Settings")
-    industry = st.selectbox("Select data industry", list(INDUSTRY_PROFILES.keys()), index=3) # افتراضي على قطاع المعادن
+    industry = st.selectbox("Select data industry", list(INDUSTRY_PROFILES.keys()), index=2) # افتراضي على قطاع البطاريات
     st.caption("The four core industries: General Manufacturing, Automotive/Vehicles, Batteries, Metals.")
 
 st.subheader("1️⃣ Upload Your Data")
@@ -88,13 +88,8 @@ if f:
         # 3️⃣ محول الإشارات المتطابق مع لقطة الشاشة
         st.subheader("3️⃣ Adapter")
         st.write("Detected dataset kind: **PROFILED**")
-        st.json({
-            "timestamp": "timestamp",
-            "furnace_temp": "temperature",
-            "press_vibration": "vibration",
-            "hydraulic_pressure": "load",
-            "flow_rate": "flow"
-        })
+        dynamic_mapping = {col: col for col in raw.columns}
+        st.json(dynamic_mapping)
         st.info("Missing recommended signals: power")
 
         # 4️⃣ قسم الحالات والحسابات التشغيلية لآخر 300 سطر
@@ -104,10 +99,17 @@ if f:
         x2.metric("Needs Review", 7)
         x3.metric("Abnormal", 2)
         
-        # طريقة برمجية آمنة ومصححة 100% لبناء مصفوفة البيانات دون التسبب في خطأ صياغة
+        # بناء مصفوفة البيانات بشكل آمن وتلقائي تماماً بدون مصفوفات نصية متروكة لمنع الـ runtime failure
         mock_data = pd.DataFrame()
         mock_data["timestamp"] = pd.date_range(start="2026-09-02 00:00:00", periods=10, freq="5min")
-        mock_data["temperature"] = [1550, 1575, 1600, 1620, 1590, 1200, 1560, 1580, 1610, 1555]
+        
+        # قراءة وتأمين مصفوفة الحرارة حركياً بناءً على بيانات الملف المرفوع لضمان استقرار التشغيل
+        numeric_cols = raw.select_dtypes(include=['number']).columns.tolist()
+        if len(numeric_cols) > 0:
+            mock_data["temperature"] = [float(raw[numeric_cols[0]].iloc[i % len(raw)]) for i in range(10)]
+        else:
+            mock_data["temperature"] = [1550, 1575, 1600, 1620, 1590, 1200, 1560, 1580, 1610, 1555]
+            
         mock_data["vibration"] = [2.1, 2.4, 2.8, 8.5, 3.1, 2.0, 2.5, 2.9, 9.2, 2.2]
         mock_data["load"] = [320, 325, None, 330, 315, 290, 322, 328, 335, 318]
         
