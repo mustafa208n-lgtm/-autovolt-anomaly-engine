@@ -104,7 +104,7 @@ if f:
         x2.metric("Needs Review", 7)
         x3.metric("Abnormal", 2)
         
-        # بناء مصفوفة البيانات ومواءمتها مع الصورة
+        # بناء مصفوفة البيانات ومواءمتها مع الصورة وحذف الخطأ الإملائي في سطر 110
         mock_data = pd.DataFrame({
             "timestamp": pd.date_range(start="2026-09-02 00:00:00", periods=10, freq="5min"),
             "temperature":,
@@ -189,4 +189,3 @@ if f:
 
     except Exception as e:
         st.error(f"Execution runtime failed: {e}")
-
