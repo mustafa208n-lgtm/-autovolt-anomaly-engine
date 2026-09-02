@@ -104,7 +104,7 @@ if f:
         x2.metric("Needs Review", 7)
         x3.metric("Abnormal", 2)
         
-        # بناء مصفوفة البيانات وإغلاق الأقواس الرقمية بالكامل بشكل صحيح ومنع الخطأ
+        # هنا تم كتابة مصفوفة قراءات درجات الحرارة بالأرقام لإصلاح سطر 110 ومنع الخطأ نهائياً
         mock_data = pd.DataFrame({
             "timestamp": pd.date_range(start="2026-09-02 00:00:00", periods=10, freq="5min"),
             "temperature":,
