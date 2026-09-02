@@ -100,28 +100,19 @@ if uploaded_file is not None:
                      "It does **NOT** constitute a final, definitive mechanical repair verdict or physical engineering certification.\n\n"
                      "**Mandatory Safety Action Required:** On-site plant engineers, field technicians, and specialized mechanical experts **MUST** "
                      "be consulted to physically audit the machinery, inspect sensor physical connectivity, and verify conditions on the shop floor before executing any hardware modifications or operational shut-downs.")
-            
-            st.json(final_report)
-            
-            report_json = json.dumps(final_report, indent=2, ensure_ascii=False)
-            st.download_button(
-                label="📥 Download Official Evidence Manifest (Pilot Evidence JSON)",
-                data=report_json,
-                file_name=f"AutoVolt_Evidence_{factory_id}_{exp_id}.json",
-                mime="application/json"
-            )
-    except Exception as e:
-        st.error(f"Structural runtime ingestion failure: {str(e)}")
+            # --- Fix for Streamlit Import Requirements ---
 
+# 1. Alias to fix the "Pilot" import error
+Pilot = PilotEvidenceLog
+
+# 2. Gateway evaluation logic required by app.py
 def pilot_readiness_gate(result: dict) -> dict:
     """
     Evaluates data health and infrastructure readiness for external pilot testing.
     """
     report = result.get("report", {})
-    # Check gateway status established in pipeline run
     gateway_status = report.get("gateway_status", "BLOCKED")
     
-    # Analyze telemetry indicators for explicit safety thresholds
     metrics = report.get("green_sustainability_metrics", {})
     energy_saved = metrics.get("energy_waste_reduction_kwh", 0.0)
     
