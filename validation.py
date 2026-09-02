@@ -112,3 +112,28 @@ if uploaded_file is not None:
             )
     except Exception as e:
         st.error(f"Structural runtime ingestion failure: {str(e)}")
+
+def pilot_readiness_gate(result: dict) -> dict:
+    """
+    Evaluates data health and infrastructure readiness for external pilot testing.
+    """
+    report = result.get("report", {})
+    # Check gateway status established in pipeline run
+    gateway_status = report.get("gateway_status", "BLOCKED")
+    
+    # Analyze telemetry indicators for explicit safety thresholds
+    metrics = report.get("green_sustainability_metrics", {})
+    energy_saved = metrics.get("energy_waste_reduction_kwh", 0.0)
+    
+    warnings = []
+    if energy_saved == 0.0:
+        warnings.append("Caution: Zero anomaly modifications detected. Field profile operating with baseline parameters.")
+    
+    if not report.get("commercial_validation_proven", False):
+        warnings.append("Notice: Industrial dataset lacks hardware-in-the-loop bankable verification certificate.")
+
+    return {
+        "status": gateway_status,
+        "warnings": warnings,
+        "note": "Automated gateway screening generated via AutoVolt Dual-Sustainability validation runtime core."
+    }
