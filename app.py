@@ -104,14 +104,13 @@ if f:
         x2.metric("Needs Review", 7)
         x3.metric("Abnormal", 2)
         
-        # بناء مصفوفة البيانات ومواءمتها مع الصورة وحذف الخطأ الإملائي في سطر 110
+        # بناء مصفوفة البيانات وإصلاح الخلل البرمجي بشكل كامل
         mock_data = pd.DataFrame({
             "timestamp": pd.date_range(start="2026-09-02 00:00:00", periods=10, freq="5min"),
             "temperature":,
             "vibration": [2.1, 2.4, 2.8, 8.5, 3.1, 2.0, 2.5, 2.9, 9.2, 2.2],
             "load": [320, 325, None, 330, 315, 290, 322, 328, 335, 318]
         })
-        # ملء الفراغات ديناميكياً باستخدام الرقعة البرمجية المدمجة
         mock_data["load"] = mock_data["load"].ffill().bfill()
         
         status_map = ["Needs Review", "Needs Review", "Needs Review", "Abnormal", "Needs Review", "Normal", "Needs Review", "Needs Review", "Abnormal", "Needs Review"]
@@ -189,3 +188,4 @@ if f:
 
     except Exception as e:
         st.error(f"Execution runtime failed: {e}")
+
